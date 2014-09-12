@@ -43,16 +43,16 @@ Once you're sure your page is configured with a locale, then you should add both
 For production environments there are also minified versions of the Javascript via ember_helpers.min.js, helpers.min.js, and jed.min.js
 
 If you are using Ember.js there are some helpers for Handlebars. For Ember templates, any attribute starting with your gettext shorthand function will be captured by gettext. In your template you can access the attribute without the gettext shorthand function prefix (which would just be 'title' in the example below).
-  
+
+```  
   {{__ "This will also be translated"}}
   {{n__ "%s has %d new message" "%s has %d new messages" 3 "User name" }}
   {{my-template __title="This will go into the .po file." }}
-
+```
 
 ## Avoiding conflicts with other libraries
 
-The default function name is 'window.__' (double underscore), to avoid conflicts with 'underscore.js'. If you want to alias the function to something
-else you may do so by adding the following code somewhere in your Javascript before including the gettext Javascript libraries:
+The default function name is `window.__` (double underscore), to avoid conflicts with 'underscore.js'. If you want to alias the function to something else you may do so by adding the following code somewhere in your Javascript before including the gettext Javascript libraries:
 
     window.handlebars_gettext_shorthand = '_';
     window.js_gettext_shorthand = '_';
@@ -91,8 +91,8 @@ Additional configuration can be done in your config/environment.rb file. You can
       # template/component calls by setting this regexp.
       # Make sure the first match is the quoted value.
       # Format of template call:
-      # {{comment-box titleTranslation="Will go in .po file." name="Will not go in .po file" }}
-      gt.handlebars_translatable_attribute_regexp = /[a-zA-Z0-9_-]+Translation="([^"\\]*(?:\\.[^"\\]*)*)"/
+      # {{comment-box __title="Will go in .po file." name="Will not go in .po file" }}
+      gt.handlebars_translatable_attribute_regexp = /#{gt.js_gettext_function}[a-zA-Z0-9_-]+="([^"\\]*(?:\\.[^"\\]*)*)"/
       
     end
 
