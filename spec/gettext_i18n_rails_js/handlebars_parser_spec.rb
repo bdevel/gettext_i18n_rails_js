@@ -8,6 +8,10 @@ describe GettextI18nRailsJs::HandlebarsParser do
     it "targets .handlebars" do
       parser.target?('foo/bar/xxx.handlebars').should == true
     end
+    
+    it "targets .hbs" do
+      parser.target?('foo/bar/xxx.hbs').should == true
+    end
 
     it "targets .mustache" do
       parser.target?('foo/bar/xxx.mustache').should == true
@@ -20,6 +24,17 @@ describe GettextI18nRailsJs::HandlebarsParser do
     it "does not target cows" do
       parser.target?('foo/bar/xxx.cows').should == false
     end
+    
+    it "targets will match if set by configuration" do
+      set_config :handlebars_parser_target_extensions, %w[.tsr]
+      parser.target?('foo/bar/xxx.tsr').should == true
+    end
+    
+    it "targets will not match if not in configuration list" do
+      set_config :handlebars_parser_target_extensions, %w[.tsr]
+      parser.target?('foo/bar/xxx.abc').should == false
+    end
+    
   end
 
   describe "#parse" do
@@ -31,14 +46,23 @@ describe GettextI18nRailsJs::HandlebarsParser do
       end
     end
 
-    it "finds plural messages in coffee" do
+    it "finds plural messages" do
       with_file '<div>{{n_ "xxxx" "yyyy" "zzzz" some_count}}' do |path|
         parser.parse(path, []).should == [
           ["xxxx\000yyyy\000zzzz", "#{path}:1"]
         ]
       end
     end
-
+    
+    it "finds plural messages with additional strings" do
+      with_file '<div>{{n_ "xxxx" "yyyy"  some_count "zzzz"}}' do |path|
+        parser.parse(path, []).should == [
+          ["xxxx\000yyyy\000zzzz", "#{path}:1"]
+        ]
+      end
+    end
+    
+    
     it "finds namespaced messages in handlebars" do
       with_file '<div>{{_ "xxxx", "yyyy"}}' do |path|
         parser.parse(path, []).should == [
@@ -47,6 +71,33 @@ describe GettextI18nRailsJs::HandlebarsParser do
       end
     end
 
+    it "finds Ember.js component translatable attributes" do
+      with_file '<div>{{frm-btn value="xxxx" titleTranslation="yyyy")}}' do |path|
+        parser.parse(path, []).should == [
+          ["yyyy", "#{path}:1"]
+        ]
+      end
+    end
+
+    it "finds component translatable attributes Regexp can be configured" do
+      set_config :handlebars_translatable_attribute_regexp, /__[a-zA-Z0-9_-]+="([^"\\]*(?:\\.[^"\\]*)*)"/
+      with_file '<div>{{frm-btn value="xxxx" __title="yyyy")}}' do |path|
+        parser.parse(path, []).should == [
+          ["yyyy", "#{path}:1"]
+        ]
+      end
+    end
+    
+    it "uses configured gettext function name" do
+      set_config :handlebars_gettext_function, 'XX__'
+      with_file '<div>{{XX__ "yyyy")}}' do |path|
+        parser.parse(path, []).should == [
+          ["yyyy", "#{path}:1"]
+        ]
+      end
+    end
+
+    
     # it "does not capture a false positive with functions ending like the gettext function" do
     #   with_file 'bla = this_should_not_be_registered__("xxxx", "yyyy")' do |path|
     #     parser.parse(path, []).should == []

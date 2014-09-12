@@ -2,20 +2,23 @@ require 'gettext/tools/xgettext'
 
 module GettextI18nRailsJs
   class JsAndCoffeeParser
-
-    class << self
-      # The gettext function name can be configured at the module level as js_gettext_function
-      # This is to provide a way to avoid conflicts with other javascript libraries.
-      # You only need to define the base function name to replace '_' and all the
-      # other variants (s_, n_, N_) will be deduced automatically.
-      attr_accessor :js_gettext_function
+    
+    # You only need to define the base function name to replace '_' and all the
+    # other variants (s_, n_, N_) will be deduced automatically.
+    def self.js_gettext_function
+      GettextI18nRails.options.js_gettext_function || '__'
     end
-    self.js_gettext_function = '__'
 
+    # Here for backwards compatibility with setting this value in a task file
+    def self.js_gettext_function=(function_name)
+      GettextI18nRails.options.js_gettext_function = function_name
+    end
+    
     def self.target?(file)
-      ['.js', '.coffee'].include?(File.extname(file))
+      extensions = GettextI18nRails.options.js_parser_target_extensions || ['.js', '.coffee']
+      extensions.include?(File.extname(file))
     end
-
+    
     # We're lazy and klumsy, so this is a regex based parser that looks for
     # invocations of the various gettext functions. Once captured, we
     # scan them once again to fetch all the function arguments.
@@ -41,7 +44,7 @@ module GettextI18nRailsJs
          [a-zA-Z0-9_\.()]*?)    # ...a number, variable name, or called function lik: 33, foo, Foo.bar()
         \s*                     # More whitespace
       /x
-
+      
       # We first parse full invocations
       invoke_regex = /
         (\b[snN]?#{_})          # Matches the function call grouping the method used (__, n__, N__, etc)
@@ -50,7 +53,7 @@ module GettextI18nRailsJs
               #{arg_regex})?    # then the last, or only argument to the function call.
           \)                    # function call closing parenthesis
       /x
-
+      
       File.new(file).each_line.each_with_index.collect do |line, idx|
         line.scan(invoke_regex).collect do |function, arguments|
           separator = function == "n#{_}" ? "\000" : "\004"

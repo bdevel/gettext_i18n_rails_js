@@ -16,6 +16,17 @@ describe GettextI18nRailsJs::JsAndCoffeeParser do
     it "does not target cows" do
       parser.target?('foo/bar/xxx.cows').should == false
     end
+
+    it "targets will match if set by configuration" do
+      set_config :js_parser_target_extensions, %w[.tsr]
+      parser.target?('foo/bar/xxx.tsr').should == true
+    end
+    
+    it "targets will not match if not in configuration list" do
+      set_config :js_parser_target_extensions, %w[.tsr]
+      parser.target?('foo/bar/xxx.abc').should == false
+    end
+    
   end
 
   describe "#parse" do
@@ -126,6 +137,17 @@ describe GettextI18nRailsJs::JsAndCoffeeParser do
       end
       GettextI18nRailsJs::JsAndCoffeeParser.js_gettext_function = '__'
     end
+    
+    it "uses configured gettext function name" do
+      set_config :js_gettext_function, 'XX__'
+      with_file 'XX__("Hello World")' do |path|
+        parser.parse(path, []).should == [
+          ['Hello World', "#{path}:1"]
+        ]
+      end
+    end
+
+
   end
 
   describe 'mixed use tests' do
