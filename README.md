@@ -42,12 +42,11 @@ Once you're sure your page is configured with a locale, then you should add both
 
 For production environments there are also minified versions of the Javascript via ember_helpers.min.js, helpers.min.js, and jed.min.js
 
-If you are using Ember.js there are some helpers for Handlebars. For Ember templates any attribute ending in "Translation" will be passed through gettext. In your template you can access the attribute without the "Translation" attribute (which would just be 'title' in the example below). 
+If you are using Ember.js there are some helpers for Handlebars. For Ember templates, any attribute starting with your gettext shorthand function will be captured by gettext. In your template you can access the attribute without the gettext shorthand function prefix (which would just be 'title' in the example below).
   
   {{__ "This will also be translated"}}
   {{n__ "%s has %d new message" "%s has %d new messages" 3 "User name" }}
-  {{my-template titleTranslation="This will go into the .po file." }}
-
+  {{my-template __title="This will go into the .po file." }}
 
 
 ## Avoiding conflicts with other libraries
