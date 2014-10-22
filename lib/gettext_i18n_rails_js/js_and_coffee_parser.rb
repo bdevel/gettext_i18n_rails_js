@@ -54,7 +54,7 @@ module GettextI18nRailsJs
           \)                    # function call closing parenthesis
       /x
       
-      File.new(file).each_line.each_with_index.collect do |line, idx|
+      to_return = File.new(file).each_line.each_with_index.collect do |line, idx|
         line.scan(invoke_regex).collect do |function, arguments|
           separator = function == "n#{_}" ? "\000" : "\004"
           key = arguments.scan(/('(?:[^'\\]|\\.)*'|"(?:[^"\\]|\\.)*")/).
@@ -64,14 +64,26 @@ module GettextI18nRailsJs
           key.gsub!("\n", '\n')
           key.gsub!("\t", '\t')
           key.gsub!("\0", '\0')
-
+          
           [key, "#{file}:#{idx+1}"]
         end
-      end.inject(:+).compact
-    end
+      end.inject(:+) || []
+      to_return.compact!
+      
+      if !to_return.empty? && GettextI18nRails.options.verbose
+        puts "#{file}"
+        to_return.each do |m|
+          puts "  #{m[0]}"
+        end
+        puts
+      end
+      
+      return to_return
+    end# def parse
 
-  end
-end
+  end# class
+end# module
 
 require 'gettext_i18n_rails/gettext_hooks'
 GettextI18nRails::GettextHooks.add_parser(GettextI18nRailsJs::JsAndCoffeeParser)
+

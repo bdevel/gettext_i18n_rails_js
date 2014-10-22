@@ -51,7 +51,6 @@ module GettextI18nRailsJs
       cookie = self.handlebars_gettext_function
       file_contents = File.read(file)
       to_return = []
-      
       # Look for {{_ "My string"}} Calls
       invoke_regex = /
         \B[{]{2}(([snN]?#{cookie})      # Matches the function handlebars helper call grouping "{{"
@@ -98,19 +97,28 @@ module GettextI18nRailsJs
         end
       end
       
-      to_return.compact.map! do |key|
+      to_return = to_return.compact.map do |key|
         key.gsub!("\n", '\n')
         key.gsub!("\t", '\t')
         key.gsub!("\0", '\0')
-        key.sub('\"', '"')
+        key.gsub!('\"', '"')
         
         [key, "#{file}:1"]
       end
       
-    end
+      if !to_return.empty? && GettextI18nRails.options.verbose
+        puts "#{file}"
+        to_return.each do |m|
+          puts "  #{m[0]}"
+        end
+        puts
+      end
+      
+      return to_return
+    end# def parse
     
-  end
-end
+  end# class
+end# module
 
 require 'gettext_i18n_rails/gettext_hooks'
 GettextI18nRails::GettextHooks.add_parser(GettextI18nRailsJs::HandlebarsParser)
